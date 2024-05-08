@@ -149,25 +149,36 @@ def check_hard_constraints(gene, timetable, professors, rooms):
     return True
 
 def print_timetable(timetable, course_map):
-    days_of_week = {1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday'}
-    time_slots = {1: '08:30-09:50', 2: '10:00-11:20', 3: '11:30-12:50', 4: '13:00-14:20',
-                  5: '14:30-15:50', 6: '16:00-17:20', 7: '17:30-18:50', 8: '19:00-20:20'}
-    formatted_timetable = {day: {time: [] for time in time_slots.values()} for day in days_of_week.values()}
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    time_slots = ['08:30-09:50', '10:00-11:20', '11:30-12:50', '13:00-14:20', '14:30-15:50', '16:00-17:20']
+    # Ensure room list is unique and sorted
+    rooms = sorted(set([entry[2] for entry in timetable]))
+
+    # Initialize the schedule dictionary
+    schedule = {time: {day: {room: "" for room in rooms} for day in days_of_week} for time in time_slots}
+
+    # Populate the schedule
     for entry in timetable:
         course_id, section_id, room_id, professor_id, day, time_slot = entry
         course = course_map[course_id]
-        day_name = days_of_week[day]
-        slot_time = time_slots[time_slot]
-        description = f"{course.name} (Section {section_id}, Room {room_id}, Prof {professor_id})"
-        formatted_timetable[day_name][slot_time].append(description)
-    for day in days_of_week.values():
-        print(f"\n{day}")
-        for time, courses in formatted_timetable[day].items():
-            if courses:
-                print(f"  {time}: {', '.join(courses)}")
-            else:
-                print(f"  {time}: No Class")
+        day_name = days_of_week[day-1]  # Convert 1-indexed day to 0-indexed
+        slot_index = time_slot - 1  # Convert 1-indexed slot to 0-indexed
+        description = f"{course.name} (Sec {section_id}, Prof {professor_id})"
+        schedule[time_slots[slot_index]][day_name][room_id] = description
 
+    # Print formatted timetable
+    print(" " * 11, end="")
+    for day in days_of_week:
+        print(f"{day:>20}", end=" ")
+    print()
+    for slot in time_slots:
+        print(f"{slot:<10}", end="")
+        for day in days_of_week:
+            print("|", end="")
+            for room in rooms:
+                print(f"{schedule[slot][day][room]:>20}", end=" ")
+        print()
+    print()
 
 def genetic_algorithm(population_size, courses, sections, rooms, professors, course_map, num_generations=100, mutation_rate=0.02):
     population = initialize_population(population_size, courses, sections, rooms, professors)
