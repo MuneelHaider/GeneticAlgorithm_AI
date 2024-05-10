@@ -1,12 +1,13 @@
 import random
 import csv
 
-# Class Definitions
+# THIS CODE DOES NOT RUN, JUST FOR GENERAL IDEA
+
 class Course:
     def __init__(self, course_id, name, is_lab, professor_ids):
         self.course_id = course_id
         self.name = name
-        self.is_lab = is_lab  # True if lab, False if theory
+        self.is_lab = is_lab
         self.professor_ids = professor_ids
 
 class Professor:
@@ -18,17 +19,15 @@ class Professor:
 class Room:
     def __init__(self, room_id, capacity):
         self.room_id = room_id
-        self.capacity = capacity  # Either 60 for a classroom or 120 for a large hall
+        self.capacity = capacity
 
 class Section:
     def __init__(self, section_id, student_strength, max_courses=5):
         self.section_id = section_id
         self.student_strength = student_strength
-        self.max_courses = max_courses  # Ensure this is set correctly
-        self.courses = []  # to track number of courses assigned
+        self.max_courses = max_courses
+        self.courses = []
 
-
-# Initialize Population
 def initialize_population(pop_size, courses, sections, rooms, professors):
     population = []
     for _ in range(pop_size):
@@ -43,7 +42,7 @@ def initialize_population(pop_size, courses, sections, rooms, professors):
                 if not suitable_rooms or not suitable_professors:
                     continue
 
-                for _ in range(2 if not course.is_lab else 1):  # Labs need only one scheduling block, but 2 consecutive slots
+                for _ in range(2 if not course.is_lab else 1):
                     room = random.choice(suitable_rooms)
                     professor = random.choice(suitable_professors)
                     available_days = list(set(range(1, 6)) - set([g['day'] for g in chromosome if g['section_id'] == section.section_id]))
@@ -53,10 +52,10 @@ def initialize_population(pop_size, courses, sections, rooms, professors):
 
                     day = random.choice(available_days)
                     if course.is_lab:
-                        start_slot = random.choice([1, 3, 5])  # Only start labs at the beginning of a 3-hour block
+                        start_slot = random.choice([1, 3, 5])
                         time_slots = [start_slot, start_slot + 1]
                     else:
-                        time_slots = random.sample(range(1, 9), 2)  # Theory classes get random slots
+                        time_slots = random.sample(range(1, 9), 2)
 
                     for time_slot in time_slots:
                         gene = {
@@ -76,7 +75,6 @@ def initialize_population(pop_size, courses, sections, rooms, professors):
 
     return population
 
-# Fitness Function
 def evaluate_timetable(timetable):
     conflicts = 0
     professor_times = {}
@@ -86,7 +84,6 @@ def evaluate_timetable(timetable):
     for gene in timetable:
         course_id, section_id, room_id, professor_id, day, time_slot = gene
 
-        # Hard constraints
         if (professor_id, day, time_slot) in professor_times:
             conflicts += 10
         if (room_id, day, time_slot) in room_times:
@@ -100,7 +97,6 @@ def evaluate_timetable(timetable):
 
     return -conflicts
 
-# Tournament Selection
 def tournament_selection(population, scores, k=3):
     selected_index = random.randint(0, len(population) - 1)
     for _ in range(k - 1):
@@ -109,7 +105,6 @@ def tournament_selection(population, scores, k=3):
             selected_index = index
     return population[selected_index]
 
-# Crossover Function
 def crossover(parent1, parent2, crossover_rate=0.8):
     min_length = min(len(parent1), len(parent2))
     if random.random() < crossover_rate and min_length > 1:
@@ -119,15 +114,12 @@ def crossover(parent1, parent2, crossover_rate=0.8):
         return child1, child2
     return parent1.copy(), parent2.copy()
 
-
-# Mutation Function
 def mutate(chromosome, mutation_rate=0.02):
     for gene in chromosome:
         if random.random() < mutation_rate:
-            gene['day'] = random.choice(range(1, 6))  # Random day change
-            gene['time_slot'] = random.choice(range(1, 9))  # Random time slot change
+            gene['day'] = random.choice(range(1, 6))
+            gene['time_slot'] = random.choice(range(1, 9))
 
-# Genetic Algorithm Main Function
 def genetic_algorithm(population_size, num_generations, courses, sections, rooms, professors):
     population = initialize_population(population_size, courses, sections, rooms, professors)
     scores = [evaluate_timetable(chromosome) for chromosome in population]
@@ -135,18 +127,17 @@ def genetic_algorithm(population_size, num_generations, courses, sections, rooms
     best = population[best_index]
 
     for generation in range(num_generations):
-        print(f"Generation {generation}: Best Score = {scores[best_index]}")
         new_population = []
         while len(new_population) < len(population):
             parent1 = tournament_selection(population, scores)
             parent2 = tournament_selection(population, scores)
-            if len(parent1) > 1 and len(parent2) > 1:  # Check if parents have more than 1 gene
+            if len(parent1) > 1 and len(parent2) > 1:
                 child1, child2 = crossover(parent1, parent2)
                 mutate(child1)
                 mutate(child2)
                 new_population.extend([child1, child2])
             else:
-                new_population.extend([parent1.copy(), parent2.copy()])  # Use parents as is if too short
+                new_population.extend([parent1.copy(), parent2.copy()])
         population = new_population
         scores = [evaluate_timetable(chromosome) for chromosome in population]
         current_best_index = scores.index(max(scores))
@@ -155,7 +146,6 @@ def genetic_algorithm(population_size, num_generations, courses, sections, rooms
             best = population[best_index]
 
     return best
-
 
 def write_day_timetable_to_csv(schedule, day, file_path):
     with open(f"{day.lower()}.csv", mode='w', newline='') as file:
@@ -186,7 +176,6 @@ def process_and_output_timetable(timetable, course_map, professor_map):
     for day in days:
         write_day_timetable_to_csv(schedule, day, f"{day.lower()}.csv")
 
-    # Output to console for quick viewing
     for time_slot, day_info in schedule.items():
         print(f"{time_slot:<15}", end="")
         for day in days:
@@ -194,7 +183,6 @@ def process_and_output_timetable(timetable, course_map, professor_map):
             print(f"| {descriptions}", end="")
         print()
 
-# Testing setup and data
 professor_names = [
     'Ayesha', 'Faisal', 'Hassan', 'Sana', 'Kamran', 'Nadia', 'Usman', 'Asma', 'Bilal', 'Zara',
     'Irfan', 'Saima', 'Junaid', 'Hina', 'Ali'
@@ -209,8 +197,7 @@ course_names = [
 
 professors = [Professor(f'P{i+1}', name) for i, name in enumerate(professor_names)]
 
-# Create Courses (12 normal, 7 lab)
-lab_indices = random.sample(range(20), 7)  # Randomly pick indices for lab courses
+lab_indices = random.sample(range(20), 7)
 courses = []
 for i, name in enumerate(course_names):
     is_lab = i in lab_indices
@@ -218,10 +205,9 @@ for i, name in enumerate(course_names):
     courses.append(Course(f'C{i+1}', name, is_lab, professor_ids))
 
 sections = [Section(f'S{i+1}', random.randint(10, 35)) for i in range(10)]
-rooms = [Room(f'R{i+1}', 60 if i < 8 else 120) for i in range(12)]  # 8 normal rooms and 4 large halls
+rooms = [Room(f'R{i+1}', 60 if i < 8 else 120) for i in range(12)]
 course_map = {course.course_id: course for course in courses}
 professor_map = {prof.professor_id: prof for prof in professors}
 
-# Execute the genetic algorithm
 best_solution = genetic_algorithm(10, 50, courses, sections, rooms, professors)
 process_and_output_timetable(best_solution, course_map, professor_map)
