@@ -29,21 +29,21 @@ class Timeslot:
 
 class TimetableSystem:
     def __init__(self):
-        self.courses = [Course("Operating Systems"), Course("Database Systems"), Course("Algorithms"),
-                        Course("Data Structures"), Course("Software Engineering"),
-                        Course("Operating Systems Lab", True), Course("Database Systems Lab", True)]
-        self.professors = [Professor("Dr. Labiba"), Professor("Sir Aadil"),
-                           Professor("Ma'am Sidra"), Professor("Sir Usman"), Professor("Dr. Mehreen")]
+        self.courses = [Course("Operating Systems"), Course("Database Systems"), Course("Algorithms"), Course("Data Structures"), Course("Software Engineering"), Course("Operating Systems Lab", True), Course("Database Systems Lab", True)]
+       
+        self.professors = [Professor("Dr. Labiba"), Professor("Sir Aadil"), Professor("Ma'am Sidra"), Professor("Sir Usman"), Professor("Dr. Mehreen")]
         self.sections = [Section(name) for name in ["A", "B", "C", "D", "E", "F"]]
         self.classrooms = [Classroom("D-101", 60), Classroom("D-102", 100)]
-        self.timeslots = [Timeslot("8:30-9:50"), Timeslot("10:00-11:20"), Timeslot("11:30-12:50"),
-                          Timeslot("1:00-2:20"), Timeslot("2:30-3:50"), Timeslot("4:00-5:20")]
+
+        self.timeslots = [Timeslot("8:30-9:50"), Timeslot("10:00-11:20"), Timeslot("11:30-12:50"), Timeslot("1:00-2:20"), Timeslot("2:30-3:50"), Timeslot("4:00-5:20")]
+       
         self.days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
         self.populationSize = 50
         self.generations = 100
         self.labsAllotted = {section.name: set() for section in self.sections}
 
     def encode(self, chromosome):
+
         encoded = ''
         for day, allocations in chromosome.items():
             for allocation in allocations:
@@ -55,7 +55,8 @@ class TimetableSystem:
         return encoded
 
     def decode(self, encoded):
-        step = 40  # Each allocation represented by 40 bits
+
+        step = 40
         chromosome = {day: [] for day in self.days}
         for i in range(0, len(encoded), step):
             course_idx = int(encoded[i:i+8], 2)
@@ -70,21 +71,24 @@ class TimetableSystem:
             classroom = self.classrooms[classroom_idx]
             professor = self.professors[professor_idx]
 
-            # Random assignment; adapt if needed
             day = random.choice(self.days)
             chromosome[day].append((course, section, timeslot, classroom, professor))
+
         return chromosome
 
 
     def checkConstraints(self, proposed, existing):
         for alreadyAllotted in existing:
-            if proposed[2] == alreadyAllotted[2]:  # Check timeslot conflicts
-                if proposed[4] == alreadyAllotted[4] or proposed[3] == alreadyAllotted[3]:  # Check professor or room conflicts
+            # Check timeslot conflicts
+            if proposed[2] == alreadyAllotted[2]:  
+                # Check professor or room conflicts
+                if proposed[4] == alreadyAllotted[4] or proposed[3] == alreadyAllotted[3]:  
                     return False
         return True
     
 
     def initializePopulation(self):
+
         chromosome = {day: [] for day in self.days}
         maxCoursesPerDay = 3
         for day in chromosome:
@@ -119,12 +123,14 @@ class TimetableSystem:
 
     def calculateFitness(self, chromosome):
         fitness = 0
+
         for day, allocations in chromosome.items():
             for allocation in allocations:
-                # Check each allocation against all others on the same day
+
                 conflicts = sum(1 for other in allocations if not self.checkConstraints(allocation, [other]) and other != allocation)
                 fitness += conflicts
-        return -fitness  # Return negative of the conflict count to signify that lower is better
+                
+        return -fitness
 
 
     def mutate(self, chromosome):
