@@ -170,8 +170,7 @@ class TimetableSystem:
                 child = self.mutate(child)
                 population.append(child)
  
-            print(f"Generation {generation}: Best Fitness = {self.calculateFitness(sortedPopulation[0])}")
- 
+        
         return sortedPopulation[0]
 
     def saveCSV(self, bestTimetable):
